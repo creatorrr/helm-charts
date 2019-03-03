@@ -1,36 +1,30 @@
-{{- if .Values.wsProxy.external.enabled }}
+{{- if eq .Values.javaServer.bus "wsproxy" }}
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-devicehive-ws-proxy-external
+  name: {{ .Release.Name }}-devicehive-ws-proxy-internal
   labels:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     component: "devicehive-ws-proxy"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"
 spec:
-  replicas: {{ .Values.wsProxy.external.replicaCount }}
+  replicas: {{ .Values.wsProxy.internal.replicaCount }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-devicehive-ws-proxy-external
+        app: {{ .Release.Name }}-devicehive-ws-proxy-internal
     spec:
       serviceAccountName: {{ if .Values.rbac.create }}{{ template "devicehive.fullname" . }}{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end}}
       containers:
-      - name: devicehive-ws-proxy-external
+      - name: devicehive-ws-proxy-internal
         image: {{ .Values.wsProxy.image | quote }}
-        imagePullPolicy: {{ .Values.wsProxy.PullPolicy }}
+        imagePullPolicy: {{ .Values.wsProxy.pullPolicy }}
         env:
         - name: ENVSEPARATOR
           value: '_'
         - name: KAFKA_KAFKA_HOSTS
           value: "{{ .Release.Name }}-kafka:9092"
-        - name: PLUGIN_MANAGER_AUTH_SERVICE_ENDPOINT
-          value: "http://{{ .Release.Name }}-devicehive-auth:8090/auth/rest"
-        - name: PLUGIN_MANAGER_PLUGIN_MANAGEMENT_SERVICE_ENDPOINT
-          value: "http://{{ .Release.Name }}-devicehive-plugin:8110/plugin/rest"
-        - name: PROXY_ENABLE_PLUGIN_MANAGER
-          value: 'true'
         - name: PROXY_WEB_SOCKET_SERVER_HOST
           valueFrom:
             fieldRef:
@@ -39,7 +33,7 @@ spec:
         - name: ws-proxy
           containerPort: 3000
         resources:
-{{ toYaml .Values.wsProxy.external.resources | indent 10 }}
+{{ toYaml .Values.wsProxy.internal.resources | indent 10 }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
