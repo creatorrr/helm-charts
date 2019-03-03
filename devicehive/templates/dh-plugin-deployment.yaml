@@ -38,6 +38,7 @@ spec:
         {{- end }}
         - name: DH_AUTH_URL
           value: "http://{{ .Release.Name }}-devicehive-auth:8090/auth/rest"
+        {{- if eq .Values.postgresql.location "off-cluster" }}
         - name: DH_POSTGRES_ADDRESS
           value: "{{ .Values.postgresql.host }}"
         {{- else }}
